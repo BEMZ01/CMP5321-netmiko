@@ -16,8 +16,8 @@ class DeviceManager:
     def __iter__(self):
         return iter(self.__devices)
 
-    def add_device(self, host, username, password, device_type, port=22, secret=None):
-        self.__devices.append(NetworkDevice(len(self.__devices), host, username, password, device_type, port, secret))
+    def add_device(self, host, username, password, device_type, hostname, port=22, secret=None):
+        self.__devices.append(NetworkDevice(len(self.__devices), host, username, password, device_type, hostname, port, secret))
         # return the id of the device
         return len(self.__devices) - 1
 
@@ -31,10 +31,11 @@ class DeviceManager:
 
 
 class NetworkDevice:
-    def __init__(self, ID, host, username, password, device_type, port=22, secret=None):
+    def __init__(self, ID, host, username, password, device_type, hostname, port=22, secret=None):
         self.net_connect = None
         self.expect_string = None
         self.host = host
+        self.hostname = hostname
         self.username = username
         self.password = password
         self.device_type = device_type
@@ -71,7 +72,9 @@ class NetworkDevice:
         self.logger.debug(f"sending command: {command}, expect_string: {self.net_connect.find_prompt()}")
         if self.net_connect is None:
             self.connect()
-        return self.net_connect.send_command(command, expect_string=self.net_connect.find_prompt())
+        if "hostname" in command:
+            return self.net_connect.send_command(command, expect_string=self.hostname)
+        return self.net_connect.send_command(command)
 
     def save_config(self):
         if self.net_connect is None:
@@ -94,7 +97,10 @@ class NetworkDevice:
             self.connect()
         self.logger.info(f"Modifying hostname to {new_hostname}")
         # set expected string to the current hostname
+        self.__send_command("en")
+        self.__send_command("conf t")
         self.__send_command(f"hostname {new_hostname}")
+        self.hostname = new_hostname
 
     def get_config(self):
         if self.net_connect is None:
@@ -115,6 +121,7 @@ def create_devices():
     USERNAMES = os.getenv('USERNAMES').split(',')
     PASSWORDS = os.getenv('PASSWORDS').split(',')
     HOSTS = os.getenv('HOSTS').split(',')
+    HOSTNAME = os.getenv('HOSTNAME').split(',')
     DEVICE_TYPES = os.getenv('DEVICE_TYPES').split(',')
     if len(USERNAMES) != len(PASSWORDS) or len(USERNAMES) != len(HOSTS) or len(USERNAMES) != len(DEVICE_TYPES):
         raise Exception("Invalid environment variables")
@@ -122,9 +129,9 @@ def create_devices():
     for i in range(len(USERNAMES)):
         if ":" in HOSTS[i]:
             host, port = HOSTS[i].split(":")
-            deviceManager.add_device(host, USERNAMES[i], PASSWORDS[i], DEVICE_TYPES[i], int(port))
+            deviceManager.add_device(host, USERNAMES[i], PASSWORDS[i], DEVICE_TYPES[i], HOSTNAME[i], int(port))
         else:
-            deviceManager.add_device(HOSTS[i], USERNAMES[i], PASSWORDS[i], DEVICE_TYPES[i])
+            deviceManager.add_device(HOSTS[i], USERNAMES[i], PASSWORDS[i], DEVICE_TYPES[i], HOSTNAME[i])
     return deviceManager
 
 
