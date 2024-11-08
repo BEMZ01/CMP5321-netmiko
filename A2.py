@@ -78,7 +78,7 @@ if __name__ == "__main__":
         startup_config = csr.get_config("startup")
         print(csr.compare_config("running", startup_config))
         print("Comparing running config with a local config...")
-        with open("config_ssh.txt", "r") as f:
+        with open(input("Enter File to compare\n> "), "r") as f:
             print(csr.compare_config("running", f.read()))
 
 
