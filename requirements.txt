@@ -1,6 +1,6 @@
 bcrypt==4.2.0
 cffi==1.17.1
-cryptography==43.0.1
+cryptography==44.0.1
 future==1.0.0
 netmiko==4.4.0
 ntc_templates==7.2.0
@@ -13,6 +13,6 @@ pyserial==3.5
 python-dotenv==1.0.1
 PyYAML==6.0.2
 scp==0.15.0
-setuptools==75.1.0
+setuptools==78.1.1
 six==1.16.0
 textfsm==1.1.3
